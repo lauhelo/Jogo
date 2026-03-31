@@ -163,6 +163,4 @@ escape_room/
 
 ---
 
-## Créditos
 
-História escrita por **Alicia**. Desenvolvido com Python + Pygame.
