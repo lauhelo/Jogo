@@ -5,22 +5,53 @@
 ## 🎮 História
 Você estava dormindo… mas acabou entrando em um pesadelo. Você não consegue sair. Para acordar, você deve atravessar 8 fases repletas de enigmas, perigos e mistérios. Felizmente, você não está sozinho: um **Fantasma Ajudante** apareceu para guiá-lo através deste sonho sombrio.
 
-##  Como Rodar no Raspberry Pi
+## 📦 Instalação
 
-### Pré-requisitos
-Certifique-se de ter o Python 3 instalado no seu sistema.
-
-### Instalação Automática
+### Opção 1: Instalação Automática (Raspberry Pi)
 Abra o terminal na pasta do jogo e execute o script de instalação:
 ```bash
 bash install_raspberry.sh
 ```
 
-### Execução Manual
-Se preferir instalar manualmente as bibliotecas necessárias:
+### Opção 2: Instalação Manual
+
+#### Passo 1: Instalar Python
+Certifique-se de ter o Python 3.7+ instalado:
 ```bash
+# Linux (Ubuntu/Debian)
 sudo apt-get update
-sudo apt-get install python3-pygame
+sudo apt-get install python3 python3-pip
+
+# Windows
+# Baixe e instale do site oficial: https://python.org
+
+# macOS
+# Use Homebrew: brew install python3
+```
+
+#### Passo 2: Criar Ambiente Virtual (Recomendado)
+```bash
+# Criar ambiente virtual
+python3 -m venv .venv
+
+# Ativar ambiente virtual
+# Linux/macOS:
+source .venv/bin/activate
+# Windows:
+.venv\Scripts\activate
+```
+
+#### Passo 3: Instalar Dependências
+```bash
+# Instalar pygame
+pip install pygame
+
+# Ou instalar todas as dependências do arquivo requirements.txt
+pip install -r requirements.txt
+```
+
+#### Passo 4: Executar o Jogo
+```bash
 python3 main.py
 ```
 
@@ -34,6 +65,12 @@ python3 main.py
 *   **Pygame (>= 2.0.0):** A única biblioteca externa necessária. Responsável por toda a engine gráfica, física, áudio e entrada de dados.
 
 **Nota:** Todas as outras dependências (os, sys, random, math) são bibliotecas padrão do Python e já vêm incluídas na instalação padrão.
+
+## 🎮 Como Jogar
+
+Após executar `python3 main.py`, você verá a tela de título. Pressione ENTER para começar.
+
+O jogo é uma aventura cooperativo para 2 jogadores onde vocês devem escapar de um pesadelo resolvendo enigmas e puzzles através de 8 fases diferentes.
 
 ## 🕹️ Controles
 
