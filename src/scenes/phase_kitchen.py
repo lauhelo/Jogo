@@ -83,15 +83,19 @@ class KitchenPhase(BasePhase):
 
     def _place_mobs(self):
         TS = TILE_SIZE
-        self._add_mob("slime_blue", 10 * TS, 7 * TS)
-        self._add_mob("slime_blue", 16 * TS, 4 * TS)
-        self._add_mob("slime_red",  20 * TS, 9 * TS)
+        self._add_mob("void_blob", 10 * TS, 7 * TS)
+        self._add_mob("void_blob", 16 * TS, 4 * TS)
+        self._add_mob("shadow_creature",  20 * TS, 9 * TS)
 
     def _on_interact(self, player, obj):
         oid = obj.obj_id
 
         # Botões (ordem: verde, vermelho, verde)
         if oid in ("btn_green", "btn_red", "btn_green2") and obj.active:
+            # Se já completou a sequência, ignora
+            if len(self._button_pressed) >= 3:
+                return
+
             color = "red" if oid == "btn_red" else "green"
             expected = self._button_order[len(self._button_pressed)]
             if color == expected:
@@ -103,7 +107,7 @@ class KitchenPhase(BasePhase):
                     self.hud.add_notification("O forno abriu! Há uma chave dentro!", color=YELLOW_COLOR)
             else:
                 self._button_pressed = []
-                self.show_dialog("Sequência errada! Tente novamente.\nDica: verde → vermelho → verde")
+                self.show_dialog("Sequência errada! Recomeçando...\nDica: verde → vermelho → verde")
             return
 
         if oid == "key_stove" and obj.active:

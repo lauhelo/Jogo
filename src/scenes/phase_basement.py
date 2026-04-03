@@ -82,10 +82,10 @@ class BasementPhase(BasePhase):
 
     def _place_mobs(self):
         TS = TILE_SIZE
-        self._add_mob("spider",    8 * TS,  8 * TS)
-        self._add_mob("spider",    16 * TS, 5 * TS)
-        self._add_mob("spider",    20 * TS, 10 * TS)
-        self._add_mob("slime_red", 10 * TS, 3 * TS)
+        self._add_mob("nightmare_spider",    8 * TS,  8 * TS)
+        self._add_mob("nightmare_spider",    16 * TS, 5 * TS)
+        self._add_mob("nightmare_spider",    20 * TS, 10 * TS)
+        self._add_mob("shadow_creature", 10 * TS, 3 * TS)
 
     def _on_interact(self, player, obj):
         oid = obj.obj_id

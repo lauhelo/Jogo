@@ -96,11 +96,9 @@ class GaragePhase(BasePhase):
 
     def _place_mobs(self):
         TS = TILE_SIZE
-        self._add_mob("spider",    6 * TS,  9 * TS)
-        self._add_mob("spider",    16 * TS, 4 * TS)
-        self._add_mob("spider",    22 * TS, 10 * TS)
-        self._add_mob("slime_red", 10 * TS, 10 * TS)
-        self._add_mob("slime_blue", 18 * TS, 2 * TS)
+        # Mobs reduzidos para dificuldade balanceada (dreamcore)
+        self._add_mob("nightmare_spider",    16 * TS, 4 * TS)
+        self._add_mob("shadow_creature", 10 * TS, 10 * TS)
 
     def _advance_progress(self):
         self._progress += 1
@@ -162,6 +160,7 @@ class GaragePhase(BasePhase):
             if "fuel" not in self._car_steps_done:
                 self._car_steps_done.append("fuel")
                 obj.active = False
+                obj.visible = False
                 self.hud.add_notification("Combustível verificado!", color=(180, 220, 100))
                 self._check_car_sequence()
             return
@@ -170,6 +169,7 @@ class GaragePhase(BasePhase):
             if "fuel" in self._car_steps_done and "ignition" not in self._car_steps_done:
                 self._car_steps_done.append("ignition")
                 obj.active = False
+                obj.visible = False
                 self.hud.add_notification("Ignição ativada!", color=(180, 220, 100))
                 self._check_car_sequence()
             elif "fuel" not in self._car_steps_done:
@@ -180,6 +180,7 @@ class GaragePhase(BasePhase):
             if "ignition" in self._car_steps_done and "gear" not in self._car_steps_done:
                 self._car_steps_done.append("gear")
                 obj.active = False
+                obj.visible = False
                 self.hud.add_notification("Marcha engatada!", color=(180, 220, 100))
                 self._check_car_sequence()
             elif "ignition" not in self._car_steps_done:

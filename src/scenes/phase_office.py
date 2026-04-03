@@ -98,8 +98,8 @@ class OfficePhase(BasePhase):
 
     def _place_mobs(self):
         TS = TILE_SIZE
-        self._add_mob("slime_red", 12 * TS, 8 * TS)
-        self._add_mob("slime_red", 18 * TS, 5 * TS)
+        self._add_mob("shadow_creature", 12 * TS, 8 * TS)
+        self._add_mob("shadow_creature", 18 * TS, 5 * TS)
 
     def _on_interact(self, player, obj):
         oid = obj.obj_id
@@ -107,6 +107,9 @@ class OfficePhase(BasePhase):
         # Armários (ordem correta: 1, 3, 2)
         if oid.startswith("cabinet_") and obj.active:
             num = int(oid.split("_")[1])
+            if num in self._cabinet_pressed:
+                return
+
             expected = self._cabinet_order[len(self._cabinet_pressed)]
             if num == expected:
                 self._cabinet_pressed.append(num)
@@ -117,7 +120,7 @@ class OfficePhase(BasePhase):
                     self.hud.add_notification("A ordem correta revelou uma chave!", color=YELLOW_COLOR)
             else:
                 self._cabinet_pressed = []
-                self.show_dialog("Ordem errada! Observe os símbolos na parede.\nDica: 1 → 3 → 2")
+                self.show_dialog("Ordem errada! Recomeçando...\nDica: 1 → 3 → 2")
             return
 
         if oid == "key_cabinet" and obj.active:

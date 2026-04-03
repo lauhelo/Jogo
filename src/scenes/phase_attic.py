@@ -87,9 +87,9 @@ class AtticPhase(BasePhase):
 
     def _place_mobs(self):
         TS = TILE_SIZE
-        self._add_mob("ghost", 10 * TS, 7 * TS)
-        self._add_mob("ghost", 20 * TS, 3 * TS)
-        self._add_mob("slime_blue", 14 * TS, 11 * TS)
+        self._add_mob("wraith", 10 * TS, 7 * TS)
+        self._add_mob("wraith", 20 * TS, 3 * TS)
+        self._add_mob("void_blob", 14 * TS, 11 * TS)
 
     def handle_event(self, event):
         super().handle_event(event)
@@ -124,6 +124,8 @@ class AtticPhase(BasePhase):
             return
 
         if oid in ("part_a", "part_b") and obj.active:
+            if oid in self._parts_collected:
+                return
             player.pick_up(oid)
             obj.active  = False
             obj.visible = False

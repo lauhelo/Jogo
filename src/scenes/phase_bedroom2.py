@@ -82,9 +82,9 @@ class Bedroom2Phase(BasePhase):
 
     def _place_mobs(self):
         TS = TILE_SIZE
-        self._add_mob("spider",    10 * TS, 6 * TS)
-        self._add_mob("spider",    18 * TS, 8 * TS)
-        self._add_mob("slime_red", 8 * TS,  3 * TS)
+        self._add_mob("nightmare_spider",    10 * TS, 6 * TS)
+        self._add_mob("nightmare_spider",    18 * TS, 8 * TS)
+        self._add_mob("shadow_creature", 8 * TS,  3 * TS)
 
     def _on_interact(self, player, obj):
         oid = obj.obj_id

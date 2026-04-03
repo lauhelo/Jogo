@@ -24,6 +24,9 @@ class GameOverScene:
         self._alpha     = 0
         self._fading_in = True
 
+        if hasattr(self.game, 'play_sfx'):
+            self.game.play_sfx('game_over')
+
         self._fade_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         self._fade_surf.fill(BLACK)
 
@@ -88,7 +91,7 @@ class WinScene:
         {"text": "Você acordou.",          "sub": "",                    "duration": 3000, "distort": False, "show_room": True},
         {"text": "O amigo imaginário",     "sub": "não está mais lá.",   "duration": 3000, "show_room": True},
         {"text": "Era só um sonho…?",      "sub": "",                    "duration": 3500},
-        {"text": "FIM",                    "sub": "Obrigado por jogar!", "duration": 0,    "is_end": True},
+        {"text": "FIM",                    "sub": "Obrigado por jogar!", "duration": 5000, "is_end": True},
     ]
 
     def __init__(self, game):
@@ -104,6 +107,9 @@ class WinScene:
         self.fading_in   = True
         self.fading_out  = False
         self.FADE_SPEED  = 4
+
+        if hasattr(self.game, 'play_sfx'):
+            self.game.play_sfx('victory')
 
         self._fade_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         self._fade_surf.fill(BLACK)
@@ -124,7 +130,9 @@ class WinScene:
     def _next_slide(self):
         slide = self.SLIDES[self.slide_idx]
         if slide.get("is_end"):
-            self.game.change_scene(SCENE_TITLE)
+            # Só permite avançar se o slide já passou tempo suficiente
+            if self.slide_timer >= 2000:  # Pelo menos 2 segundos para ver a mensagem
+                self.game.change_scene(SCENE_TITLE)
         elif self.slide_idx < len(self.SLIDES) - 1:
             self.fading_out = True
 

@@ -1,6 +1,7 @@
 """
 Sistema de câmera que segue os jogadores.
 """
+import random
 from src.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
@@ -15,9 +16,18 @@ class Camera:
         self.map_h   = map_height
         self.offset_x = 0
         self.offset_y = 0
+        # Screen shake effects
+        self.shake_intensity = 0.0
+        self.shake_timer = 0
 
-    def update(self, players):
-        """Centraliza a câmera entre os jogadores ativos."""
+    def update(self, players, dt_ms=16):
+        """Centraliza a câmera entre os jogadores ativos e atualiza shake."""
+        # Atualiza screen shake
+        if self.shake_timer > 0:
+            self.shake_timer -= dt_ms
+        else:
+            self.shake_intensity = 0.0
+
         alive = [p for p in players if p.alive]
         if not alive:
             return
@@ -43,4 +53,29 @@ class Camera:
         return rect.move(-int(self.offset_x), -int(self.offset_y))
 
     def get_offset(self):
-        return (int(self.offset_x), int(self.offset_y))
+        """Retorna offset com shake aplicado."""
+        ox = int(self.offset_x)
+        oy = int(self.offset_y)
+        if self.shake_intensity > 0:
+            ox += random.randint(-int(self.shake_intensity), int(self.shake_intensity))
+            oy += random.randint(-int(self.shake_intensity), int(self.shake_intensity))
+        return (ox, oy)
+
+    def shake(self, intensity=3.0, duration=200):
+        """Inicia screen shake (efeito dreamcore)."""
+        self.shake_intensity = intensity
+        self.shake_timer = duration
+
+    def get_offset(self):
+        """Retorna offset com shake aplicado."""
+        ox = int(self.offset_x)
+        oy = int(self.offset_y)
+        if self.shake_intensity > 0:
+            ox += random.randint(-int(self.shake_intensity), int(self.shake_intensity))
+            oy += random.randint(-int(self.shake_intensity), int(self.shake_intensity))
+        return (ox, oy)
+
+    def shake(self, intensity=3.0, duration=200):
+        """Inicia screen shake (efeito dreamcore)."""
+        self.shake_intensity = intensity
+        self.shake_timer = duration

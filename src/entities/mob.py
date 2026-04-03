@@ -4,6 +4,7 @@ Entidade Mob — inimigos com comportamentos variados.
 import pygame
 import math
 import random
+import os
 from src.constants import TILE_SIZE, PIXEL_SCALE
 from src.utils.assets import sprite
 
@@ -18,16 +19,16 @@ class Mob(pygame.sprite.Sprite):
     """
 
     MOB_TYPES = {
-        "slime_green": {"sprite": "mob_slime_green.png", "speed": 0.6,  "behavior": "patrol",  "detect_range": 0},
-        "slime_red":   {"sprite": "mob_slime_red.png",   "speed": 1.0,  "behavior": "chase",   "detect_range": 120},
-        "slime_blue":  {"sprite": "mob_slime_blue.png",  "speed": 1.4,  "behavior": "chase",   "detect_range": 160},
-        "ghost":       {"sprite": "mob_ghost.png",       "speed": 1.2,  "behavior": "random",  "detect_range": 80},
-        "spider":      {"sprite": "mob_spider.png",      "speed": 1.8,  "behavior": "fast",    "detect_range": 200},
+        "nightmare_slime": {"sprite": "mob_slime_green.png", "speed": 0.21,  "behavior": "patrol",  "detect_range": 0},
+        "shadow_creature": {"sprite": "mob_slime_red.png",   "speed": 0.35,  "behavior": "chase",   "detect_range": 120},
+        "void_blob":       {"sprite": "mob_slime_blue.png",  "speed": 0.49,  "behavior": "chase",   "detect_range": 160},
+        "wraith":          {"sprite": "mob_ghost.png",       "speed": 0.42,  "behavior": "random",  "detect_range": 80},
+        "nightmare_spider": {"sprite": "mob_spider.png",     "speed": 0.63,  "behavior": "fast",    "detect_range": 200},
     }
 
     def __init__(self, mob_type: str, x: int, y: int, patrol_points=None):
         super().__init__()
-        cfg = self.MOB_TYPES.get(mob_type, self.MOB_TYPES["slime_green"])
+        cfg = self.MOB_TYPES.get(mob_type, self.MOB_TYPES["nightmare_slime"])
         self.mob_type       = mob_type
         self.x              = float(x)
         self.y              = float(y)
@@ -46,10 +47,56 @@ class Mob(pygame.sprite.Sprite):
         self.image = img
         self.rect  = img.get_rect(topleft=(x, y))
 
+        # Sons de mob (carrega preferências por tipo e fallback)
+        self.move_sound = self._load_mob_sound('move')
+        self.hit_sound = self._load_mob_sound('hit')
+
+    def _load_mob_sound(self, action: str):
+        if not pygame.mixer.get_init():
+            return None
+
+        candidates = [
+            f'assets/sounds/{self.mob_type}_{action}.wav',
+            f'assets/sounds/{self.mob_type}_{action}.ogg',
+            f'assets/sounds/mob_{action}.wav',
+            f'assets/sounds/mob_{action}.ogg',
+        ]
+
+        for path in candidates:
+            if os.path.isfile(path):
+                try:
+                    snd = pygame.mixer.Sound(path)
+                    snd.set_volume(0.2 if action == 'move' else 0.35)
+                    return snd
+                except Exception:
+                    continue
+        return None
+
+    def _play_sound_distorted(self, sound, proximity_distance=None):
+        """Toca som com efeito distortion (glitch de áudio dreamcore).
+        Se proximity_distance > 300, não toca."""
+        if not sound:
+            return
+        # Não toca se o som está muito longe do jogador
+        if proximity_distance and proximity_distance > 300:
+            return
+        # 5% de chance de não tocar (glitch)
+        if random.random() < 0.05:
+            return
+        try:
+            # Varia o volume aleatoriamente (0.1 a 0.3) para simular distortion
+            original_vol = sound.get_volume()
+            distorted_vol = random.uniform(0.1, 0.3)
+            sound.set_volume(distorted_vol)
+            sound.play()
+            sound.set_volume(original_vol)
+        except Exception:
+            pass
+
     def update(self, players, walls, dt_ms):
         """Atualiza IA do mob."""
         if self.behavior == "patrol":
-            self._do_patrol(walls)
+            self._do_patrol(walls, players)
         elif self.behavior in ("chase", "fast"):
             self._do_chase(players, walls)
         elif self.behavior == "random":
@@ -59,7 +106,7 @@ class Mob(pygame.sprite.Sprite):
         self.rect.y = int(self.y)
 
     # ─── Comportamentos ──────────────────────────────────────────────────────
-    def _do_patrol(self, walls):
+    def _do_patrol(self, walls, players):
         if not self.patrol_points:
             return
         tx, ty = self.patrol_points[self._patrol_idx]
@@ -69,7 +116,7 @@ class Mob(pygame.sprite.Sprite):
         if dist < 4:
             self._patrol_idx = (self._patrol_idx + self._patrol_dir) % len(self.patrol_points)
         else:
-            self._move(dx / dist * self.speed, dy / dist * self.speed, walls)
+            self._move(dx / dist * self.speed, dy / dist * self.speed, walls, players)
 
     def _do_chase(self, players, walls):
         target = self._nearest_player(players)
@@ -84,7 +131,7 @@ class Mob(pygame.sprite.Sprite):
             self._chasing = True
 
         if self._chasing and dist > 0:
-            self._move(dx / dist * self.speed, dy / dist * self.speed, walls)
+            self._move(dx / dist * self.speed, dy / dist * self.speed, walls, players)
 
     def _do_random(self, players, walls, dt_ms):
         self._random_timer -= dt_ms
@@ -103,13 +150,13 @@ class Mob(pygame.sprite.Sprite):
                 dx = px - self.x
                 dy = py - self.y
                 if dist > 0:
-                    self._move(dx / dist * self.speed, dy / dist * self.speed, walls)
+                    self._move(dx / dist * self.speed, dy / dist * self.speed, walls, players)
                 return
 
-        self._move(self._random_dx, self._random_dy, walls)
+        self._move(self._random_dx, self._random_dy, walls, players)
 
     # ─── Utilitários ─────────────────────────────────────────────────────────
-    def _move(self, dx, dy, walls):
+    def _move(self, dx, dy, walls, players=None):
         self.x += dx
         self.rect.x = int(self.x)
         for w in walls:
@@ -148,6 +195,8 @@ class Mob(pygame.sprite.Sprite):
         for p in players:
             if p.alive and self.rect.colliderect(p.rect):
                 hit.append(p)
+                # Som de colisão toca sempre (distância = 0)
+                self._play_sound_distorted(self.hit_sound, proximity_distance=0)
         return hit
 
     def draw(self, surface, camera_offset=(0, 0)):

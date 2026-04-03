@@ -30,7 +30,8 @@ class IntroScene:
         {"text": "Você não consegue sair.",         "sub": "",                                    "duration": 2800, "bg": (10, 0, 20)},
         {"text": "",                                "sub": "",                                    "duration": 2000, "bg": (15, 10, 30), "show_room": True},
         {"text": "Uma luz surge no escuro…",        "sub": "",                                    "duration": 2200, "bg": (15, 10, 30), "show_room": True, "show_friend": True},
-        {"text": "\"Não se preocupe,\"",            "sub": "\"estou aqui para ajudar.\"",         "duration": 3000, "bg": (15, 10, 30), "show_friend": True},
+        {"text": "\"Não se preocupe,\"",            "sub": "\"estou aqui para ajudar você a escapar.\"", "duration": 3000, "bg": (15, 10, 30), "show_friend": True},
+        {"text": "Preste atenção no ambiente",      "sub": "e em todas as pistas para sair do sonho.", "duration": 4000, "bg": (15, 10, 30), "show_friend": True},
         {"text": "OBJETIVO:",                       "sub": "Encontre a saída.",                   "duration": 3000, "bg": (10, 5, 25), "highlight": True},
     ]
 
@@ -48,20 +49,27 @@ class IntroScene:
         self.fading_out  = False
         self.FADE_SPEED  = 5
 
+        # Toca a música de fundo da intro com volume mais alto
+        self.game.play_background_music('assets/sounds/background.ogg', volume=0.45)
+
         self._fade_surf  = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         self._fade_surf.fill(BLACK)
 
         # Carrega sprites
-        try:
-            self._friend_img = sprite("imaginary_friend.png", scale=PIXEL_SCALE * 3)
-        except:
-            self._friend_img = None
-
-        # Sprites dos jogadores para mostrar no quarto
         genders = getattr(game, "player_genders", ["boy", "girl"])
         try:
+            # O amigo imaginário agora usa o sprite do P2 (Fantasma) escolhido
+            self._friend_img = sprite(f"ghost_{genders[1]}_down_0.png", scale=PIXEL_SCALE * 3)
+        except:
+            try:
+                self._friend_img = sprite("imaginary_friend.png", scale=PIXEL_SCALE * 3)
+            except:
+                self._friend_img = None
+
+        # Sprites dos jogadores para mostrar no quarto
+        try:
             self._p1_img = sprite(f"{genders[0]}_down_0.png", scale=PIXEL_SCALE * 2)
-            self._p2_img = sprite(f"{genders[1]}_down_0.png", scale=PIXEL_SCALE * 2)
+            self._p2_img = sprite(f"ghost_{genders[1]}_down_0.png", scale=PIXEL_SCALE * 2)
         except:
             self._p1_img = None
             self._p2_img = None

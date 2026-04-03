@@ -98,6 +98,7 @@ class BasePhase:
         self.keys_collected = 0
         self.phase_complete = False
         self._transition_timer = 0
+        self._paused = False
 
         # Objetos e mobs
         self.objects  = []   # lista de InteractiveObject
@@ -108,6 +109,7 @@ class BasePhase:
         # Tiles pré-renderizados
         self._tile_cache = {}
         self._tile_surf  = None   # superfície do mapa completo
+        self._map_rect   = pygame.Rect(0, 0, 800, 600)
 
         # Câmera
         self.camera = Camera(800, 600)
@@ -129,6 +131,9 @@ class BasePhase:
         self._place_mobs()
         self._spawn_players()
 
+        # Toca a música de gameplay ao iniciar a fase
+        self.game.play_background_music('assets/sounds/background-gameplay.mp3', volume=0.2)
+
     def _build_map(self):
         """Subclasses definem o mapa em _get_map_data()."""
         map_data = self._get_map_data()
@@ -140,6 +145,7 @@ class BasePhase:
         map_w = cols * TILE_SIZE
         map_h = rows * TILE_SIZE
 
+        self._map_rect = pygame.Rect(0, 0, map_w, map_h)
         self.camera = Camera(map_w, map_h)
         self._tile_surf = pygame.Surface((map_w, map_h))
         self._tile_surf.fill((20, 15, 30))
@@ -231,17 +237,37 @@ class BasePhase:
     def _check_interactions(self, player, key_pressed):
         """Verifica se o jogador está próximo de um objeto e pressiona ação."""
         if not key_pressed:
+            # Reseta o estado de "tecla pressionada" para permitir nova interação
+            if hasattr(player, "_last_action_state"):
+                player._last_action_state = False
             return
+
+        # Evita interações múltiplas em um único clique (debounce)
+        if getattr(player, "_last_action_state", False):
+            return
+        player._last_action_state = True
+
+        # Encontra o objeto mais próximo dentro do alcance
+        closest_obj = None
+        min_dist = 60 # Alcance aumentado para 60 pixels
+
         for obj in self.objects:
-            if not obj.active or not obj.visible:
+            if not obj.active:
                 continue
+            # Se o objeto não for visível, só permite interação se for uma chave (que pode estar oculta)
+            if not obj.visible and not obj.obj_id.startswith("key"):
+                continue
+
             dist = math.hypot(
                 player.rect.centerx - obj.rect.centerx,
                 player.rect.centery - obj.rect.centery
             )
-            if dist < 50:
-                self._on_interact(player, obj)
-                break
+            if dist < min_dist:
+                min_dist = dist
+                closest_obj = obj
+
+        if closest_obj:
+            self._on_interact(player, closest_obj)
 
     def _on_interact(self, player, obj):
         """Subclasses implementam lógica de interação."""
@@ -255,12 +281,16 @@ class BasePhase:
         player.pick_up(obj.obj_id)
         self.hud.add_notification(f"Chave coletada! ({self.keys_collected}/{self.KEYS_NEEDED})",
                                   color=(255, 220, 50))
+        if hasattr(self.game, 'play_sfx'):
+            self.game.play_sfx('key_collect')
         if self.keys_collected >= self.KEYS_NEEDED:
             self._unlock_exit()
 
     def _unlock_exit(self):
         """Desbloqueia a saída quando todas as chaves são coletadas."""
         self.hud.add_notification("A saída foi desbloqueada!", color=(100, 220, 100))
+        if hasattr(self.game, 'play_sfx'):
+            self.game.play_sfx('door_unlock')
         # Ativa a porta de saída
         for obj in self.objects:
             if obj.obj_id == "exit_door":
@@ -273,9 +303,15 @@ class BasePhase:
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                self.game.change_scene("title")
+                # Abre o menu de pausa
+                from src.scenes.pause_scene import PauseScene
+                self._paused = True
+                self.game._scene = PauseScene(self.game, self)
 
     def update(self, dt_ms):
+        if self._paused:
+            return
+
         keys = pygame.key.get_pressed()
 
         # Input dos jogadores
@@ -288,11 +324,11 @@ class BasePhase:
         alive_players = [p for p in self.players if p.alive]
 
         if self.players[0].alive:
-            self.players[0].handle_input(keys, p1_key_map, self.walls, self.players)
+            self.players[0].handle_input(keys, p1_key_map, self.walls, self.players, self._map_rect)
             self._check_interactions(self.players[0], p1_action)
 
         if len(self.players) > 1 and self.players[1].alive:
-            self.players[1].handle_input(keys, p2_key_map, self.walls, self.players)
+            self.players[1].handle_input(keys, p2_key_map, self.walls, self.players, self._map_rect)
             self._check_interactions(self.players[1], p2_action)
 
         # Animação dos jogadores
@@ -313,7 +349,7 @@ class BasePhase:
         # Verifica game over
         if all(not p.alive for p in self.players):
             self._transition_timer += dt_ms
-            if self._transition_timer > 1500:
+            if self._transition_timer >= 2000:
                 self.game.change_scene(SCENE_GAMEOVER)
                 return
 
@@ -321,7 +357,7 @@ class BasePhase:
         self._check_exit()
 
         # Câmera
-        self.camera.update(alive_players if alive_players else self.players)
+        self.camera.update(alive_players if alive_players else self.players, dt_ms)
 
         # HUD
         self.hud.update(dt_ms)

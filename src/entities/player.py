@@ -20,6 +20,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.player_id  = player_id   # 1 ou 2
         self.gender     = gender      # "boy" ou "girl"
+        self.is_ghost   = (player_id == 2)
         self.x          = float(x)
         self.y          = float(y)
         self.speed      = PLAYER_SPEED
@@ -29,7 +30,12 @@ class Player(pygame.sprite.Sprite):
         self.inventory  = []          # lista de strings de itens coletados
         self.direction  = "down"
         self.moving     = False
-        self.color      = BOY_COLOR if gender == "boy" else GIRL_COLOR
+        
+        # Cores
+        if self.is_ghost:
+            self.color = (180, 220, 255) if gender == "boy" else (255, 200, 230)
+        else:
+            self.color = BOY_COLOR if gender == "boy" else GIRL_COLOR
 
         # Animação
         self._anim_timer    = 0
@@ -47,7 +53,7 @@ class Player(pygame.sprite.Sprite):
         self.rect     = self.image.get_rect(topleft=(int(x), int(y)))
 
     def _load_sprites(self):
-        prefix = self.gender
+        prefix = "ghost_" + self.gender if self.is_ghost else self.gender
         dirs = ["down", "up", "left", "right"]
         result = {}
         for d in dirs:
@@ -58,7 +64,7 @@ class Player(pygame.sprite.Sprite):
         return result
 
     # ─── Movimento ───────────────────────────────────────────────────────────
-    def handle_input(self, keys, key_map: dict, walls, others):
+    def handle_input(self, keys, key_map: dict, walls, others, map_rect=None):
         """Processa input e move o jogador, verificando colisão."""
         dx, dy = 0, 0
         moved  = False
@@ -71,6 +77,7 @@ class Player(pygame.sprite.Sprite):
             dy = self.speed
             self.direction = "down"
             moved = True
+        
         if keys[key_map["left"]]:
             dx = -self.speed
             self.direction = "left"
@@ -83,48 +90,64 @@ class Player(pygame.sprite.Sprite):
         self.moving = moved
 
         if moved:
-            self._try_move(dx, dy, walls, others)
+            self._try_move(dx, dy, walls, others, map_rect)
 
-    def _try_move(self, dx, dy, walls, others):
+    def _try_move(self, dx, dy, walls, others, map_rect=None):
         """Move com resolução de colisão separada por eixo."""
         # Eixo X
         self.x += dx
         self.rect.x = int(self.x)
+        
+        # Bordas do mapa (X)
+        if map_rect:
+            if self.rect.left < map_rect.left:
+                self.rect.left = map_rect.left
+            elif self.rect.right > map_rect.right:
+                self.rect.right = map_rect.right
+            self.x = float(self.rect.x)
+
         for wall in walls:
             if self.rect.colliderect(wall):
                 if dx > 0:
                     self.rect.right = wall.left
-                else:
+                elif dx < 0:
                     self.rect.left = wall.right
                 self.x = float(self.rect.x)
 
         # Eixo Y
         self.y += dy
         self.rect.y = int(self.y)
+
+        # Bordas do mapa (Y)
+        if map_rect:
+            if self.rect.top < map_rect.top:
+                self.rect.top = map_rect.top
+            elif self.rect.bottom > map_rect.bottom:
+                self.rect.bottom = map_rect.bottom
+            self.y = float(self.rect.y)
+
         for wall in walls:
             if self.rect.colliderect(wall):
                 if dy > 0:
                     self.rect.bottom = wall.top
-                else:
+                elif dy < 0:
                     self.rect.top = wall.bottom
                 self.y = float(self.rect.y)
 
-        # Colisão com o outro jogador
+        # Colisão com o outro jogador (apenas se ambos vivos)
         for other in others:
-            if other is self:
+            if other is self or not other.alive:
                 continue
             if self.rect.colliderect(other.rect):
-                # Empurra de volta
-                if dx > 0:
-                    self.rect.right = other.rect.left
-                elif dx < 0:
-                    self.rect.left = other.rect.right
-                if dy > 0:
-                    self.rect.bottom = other.rect.top
-                elif dy < 0:
-                    self.rect.top = other.rect.bottom
-                self.x = float(self.rect.x)
-                self.y = float(self.rect.y)
+                # Resolução simples: volta para a posição anterior no eixo que colidiu
+                if dx != 0:
+                    if dx > 0: self.rect.right = other.rect.left
+                    else: self.rect.left = other.rect.right
+                    self.x = float(self.rect.x)
+                if dy != 0:
+                    if dy > 0: self.rect.bottom = other.rect.top
+                    else: self.rect.top = other.rect.bottom
+                    self.y = float(self.rect.y)
 
     # ─── Animação ────────────────────────────────────────────────────────────
     def update_animation(self, dt_ms: int):
@@ -197,7 +220,9 @@ class Player(pygame.sprite.Sprite):
     def _draw_indicator(self, surface, sx, sy):
         font = pygame.font.SysFont("courier", 10, bold=True)
         label = f"P{self.player_id}"
-        color = BOY_COLOR if self.gender == "boy" else GIRL_COLOR
+        if self.is_ghost:
+            label += " (Fantasma)"
+        color = self.color
         rendered = font.render(label, False, color)
         surface.blit(rendered, (sx + self.rect.width // 2 - rendered.get_width() // 2, sy - 12))
 

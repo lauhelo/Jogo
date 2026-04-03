@@ -38,7 +38,7 @@ class SelectScene:
     """
 
     OPTIONS = ["boy", "girl"]
-    LABELS  = {"boy": "MENINO", "girl": "MENINA"}
+    LABELS  = {"boy": "MASCULINO", "girl": "FEMININO"}
     COLORS  = {"boy": BOY_COLOR, "girl": GIRL_COLOR}
 
     def __init__(self, game):
@@ -59,6 +59,8 @@ class SelectScene:
         self._previews = {
             "boy":  sprite("boy_down_0.png",  scale=PIXEL_SCALE * 4),
             "girl": sprite("girl_down_0.png", scale=PIXEL_SCALE * 4),
+            "ghost_boy":  sprite("ghost_boy_down_0.png",  scale=PIXEL_SCALE * 4),
+            "ghost_girl": sprite("ghost_girl_down_0.png", scale=PIXEL_SCALE * 4),
         }
 
         # Animação de "bounce" nos ícones selecionados
@@ -166,12 +168,18 @@ class SelectScene:
         confirmed = self._confirmed[player_idx]
         cursor    = self._cursor[player_idx]
         p_num     = player_idx + 1
-        p_color   = BOY_COLOR if player_idx == 0 else GIRL_COLOR
+        
+        # Cores e Labels
+        if player_idx == 0:
+            p_color = BOY_COLOR
+            p_title = "JOGADOR 1 (HUMANO)"
+        else:
+            p_color = (180, 220, 255)
+            p_title = "JOGADOR 2 (FANTASMA)"
 
         # ── Cabeçalho do jogador ─────────────────────────────────────────
         header_y = 90
-        label    = f"JOGADOR {p_num}"
-        header   = self.font_sub.render(label, False, p_color)
+        header   = self.font_sub.render(p_title, False, p_color)
         surface.blit(header, (cx - header.get_width() // 2, header_y))
 
         if confirmed:
@@ -184,7 +192,8 @@ class SelectScene:
 
         # ── Preview do personagem selecionado ────────────────────────────
         sel_gender  = self.OPTIONS[cursor]
-        preview_img = self._previews[sel_gender]
+        preview_key = sel_gender if player_idx == 0 else f"ghost_{sel_gender}"
+        preview_img = self._previews[preview_key]
         bounce_off  = int(self._bounce[player_idx]) if not confirmed else 0
         pw, ph      = preview_img.get_size()
         preview_x   = cx - pw // 2
@@ -197,9 +206,9 @@ class SelectScene:
 
         surface.blit(preview_img, (preview_x, preview_y))
 
-        # ── Opções (Menino / Menina) ──────────────────────────────────────
+        # ── Opções (Masculino / Feminino) ──────────────────────────────────────
         opt_y = 310
-        opt_w = 100
+        opt_w = 120
         opt_h = 36
         gap   = 20
         total_w = len(self.OPTIONS) * opt_w + (len(self.OPTIONS) - 1) * gap
@@ -218,7 +227,7 @@ class SelectScene:
                 bg_col  = (30, 80, 30)
                 bd_col  = (80, 200, 80)
             elif is_selected:
-                bg_col  = self.COLORS[opt]
+                bg_col  = self.COLORS[opt] if player_idx == 0 else (60, 80, 120)
                 bd_col  = UI_SELECTED
             else:
                 bg_col  = UI_PANEL
@@ -235,13 +244,14 @@ class SelectScene:
                                 oy + opt_h // 2 - lbl.get_height() // 2))
 
             # Mini sprite dentro da opção
-            mini = sprite(f"{opt}_down_0.png", scale=PIXEL_SCALE)
+            sprite_name = f"{opt}_down_0.png" if player_idx == 0 else f"ghost_{opt}_down_0.png"
+            mini = sprite(sprite_name, scale=PIXEL_SCALE)
             mini_x = ox + opt_w // 2 - mini.get_width() // 2
             surface.blit(mini, (mini_x, oy - mini.get_height() - 4))
 
         # ── Nome do personagem selecionado ───────────────────────────────
         name_y = opt_y + opt_h + 16
-        name_color = self.COLORS[sel_gender]
+        name_color = self.COLORS[sel_gender] if player_idx == 0 else (180, 220, 255)
         name_lbl = self.font_sub.render(self.LABELS[sel_gender], False, name_color)
         surface.blit(name_lbl, (cx - name_lbl.get_width() // 2, name_y))
 

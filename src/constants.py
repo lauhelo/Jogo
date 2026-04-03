@@ -123,10 +123,10 @@ PHASE_NAMES = {
 
 # ─── Velocidades ─────────────────────────────────────────────────────────────
 PLAYER_SPEED    = 2
-MOB_SPEED_SLOW  = 0.6
-MOB_SPEED_MED   = 1.0
-MOB_SPEED_FAST  = 1.6
-MOB_SPEED_VFAST = 2.2
+MOB_SPEED_SLOW  = 0.4
+MOB_SPEED_MED   = 0.7
+MOB_SPEED_FAST  = 1.1
+MOB_SPEED_VFAST = 1.5
 
 # ─── Paths ───────────────────────────────────────────────────────────────────
 import os

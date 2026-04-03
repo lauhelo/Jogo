@@ -103,13 +103,13 @@ class GardenPhase(BasePhase):
     def _place_mobs(self):
         TS = TILE_SIZE
         # 3 slimes com patrulha
-        self._add_mob("slime_green", 8 * TS, 4 * TS, [
+        self._add_mob("nightmare_slime", 8 * TS, 4 * TS, [
             (8 * TS, 4 * TS), (16 * TS, 4 * TS)
         ])
-        self._add_mob("slime_green", 6 * TS, 10 * TS, [
+        self._add_mob("nightmare_slime", 6 * TS, 10 * TS, [
             (6 * TS, 10 * TS), (6 * TS, 12 * TS)
         ])
-        self._add_mob("slime_green", 20 * TS, 9 * TS, [
+        self._add_mob("nightmare_slime", 20 * TS, 9 * TS, [
             (20 * TS, 9 * TS), (12 * TS, 9 * TS)
         ])
 
@@ -139,9 +139,14 @@ class GardenPhase(BasePhase):
         # Flores (ordem correta)
         if oid.startswith("flower_") and obj.active:
             color = oid.replace("flower_", "")
+            # Se já ativou essa flor, ignora
+            if color in self._flower_pressed:
+                return
+
             expected = self._flower_order[len(self._flower_pressed)]
             if color == expected:
                 self._flower_pressed.append(color)
+                # Muda visual da flor para indicar ativação (opcional, aqui apenas notificação)
                 self.hud.add_notification(f"Flor {color} ativada! ({len(self._flower_pressed)}/4)", color=(180, 220, 100))
                 if len(self._flower_pressed) == 4:
                     # Revela chave 2
@@ -149,8 +154,9 @@ class GardenPhase(BasePhase):
                     self._flower_key_spot.active  = True
                     self.hud.add_notification("A ordem das flores revelou uma chave!", color=YELLOW_COLOR)
             else:
+                # Errou a ordem, reseta tudo
                 self._flower_pressed = []
-                self.show_dialog("Ordem errada! Observe as flores com atenção.\nDica: vermelho → azul → amarelo → roxo")
+                self.show_dialog("Ordem errada! Recomeçando...\nDica: vermelho → azul → amarelo → roxo")
             return
 
         # Chave das flores

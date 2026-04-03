@@ -90,9 +90,9 @@ class Bedroom1Phase(BasePhase):
     def _place_mobs(self):
         TS = TILE_SIZE
         # Surgem próximos ao jogador
-        self._add_mob("slime_red",  8 * TS, 10 * TS)
-        self._add_mob("slime_blue", 15 * TS, 7 * TS)
-        self._add_mob("ghost",      20 * TS, 5 * TS)
+        self._add_mob("shadow_creature",  8 * TS, 10 * TS)
+        self._add_mob("void_blob", 15 * TS, 7 * TS)
+        self._add_mob("wraith",      20 * TS, 5 * TS)
 
     def _on_interact(self, player, obj):
         oid = obj.obj_id
@@ -116,6 +116,9 @@ class Bedroom1Phase(BasePhase):
 
         # Gaveta secreta (ordem: livro → espelho → caixa)
         if oid in self._drawer_order and obj.active:
+            if oid in self._drawer_pressed:
+                return
+
             expected = self._drawer_order[len(self._drawer_pressed)]
             if oid == expected:
                 self._drawer_pressed.append(oid)
@@ -126,7 +129,7 @@ class Bedroom1Phase(BasePhase):
                     self.hud.add_notification("A gaveta secreta abriu!", color=YELLOW_COLOR)
             else:
                 self._drawer_pressed = []
-                self.show_dialog("Ordem errada! Tente novamente.\nDica: livro → espelho → caixa")
+                self.show_dialog("Ordem errada! Recomeçando...\nDica: livro → espelho → caixa")
             return
 
         if oid == "key_drawer" and obj.active:

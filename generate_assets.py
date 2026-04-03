@@ -3,7 +3,6 @@ Gerador de assets de pixel art para o jogo Escape Room.
 Cria todos os sprites, tiles e elementos de UI usando pygame + numpy.
 """
 import pygame
-import numpy as np
 import os
 
 pygame.init()
@@ -156,39 +155,68 @@ def draw_girl_sprite(direction="down", frame=0):
     return s
 
 # ─────────────────────────────────────────────
-# SPRITE AMIGO IMAGINÁRIO (fantasminha luminoso 16x24)
+# SPRITE AMIGO IMAGINÁRIO / FANTASMA (fantasminha luminoso 16x24)
 # ─────────────────────────────────────────────
-def draw_imaginary_friend():
+def draw_ghost_sprite(gender="boy", direction="down", frame=0):
+    """Desenha sprite do fantasma (P2) 16x24"""
     s = make_surface(16, 24)
-    GLOW = (180, 220, 255, 200)
-    GLOW2 = (140, 190, 255, 150)
-    GLOW_EYE = (50, 100, 200)
-    # Corpo oval
+    
+    # Cores baseadas no gênero
+    if gender == "boy":
+        GLOW = (180, 220, 255, 180)  # Azulado
+        GLOW2 = (140, 190, 255, 130)
+        GLOW_EYE = (50, 100, 200)
+        HAIR_C = (80, 50, 20, 150)
+    else:
+        GLOW = (255, 200, 230, 180)  # Rosado
+        GLOW2 = (255, 160, 200, 130)
+        GLOW_EYE = (200, 50, 120)
+        HAIR_C = (200, 100, 50, 150)
+
+    # Corpo oval (base fantasmagórica)
     for x in range(4, 12):
         for y in range(2, 18):
             s.set_at((x, y), GLOW)
     for x in range(3, 13):
         for y in range(4, 16):
             s.set_at((x, y), GLOW)
-    for x in range(2, 14):
-        for y in range(6, 14):
-            s.set_at((x, y), GLOW)
-    # Cauda ondulada
+    
+    # Cauda ondulada (animação simples com frame)
+    offset = frame * 2
     for x in range(3, 13):
-        for y in range(16, 20):
-            s.set_at((x, y), GLOW2)
-    for x in range(4, 6):
-        s.set_at((x, 20), GLOW2)
-    for x in range(7, 9):
-        s.set_at((x, 21), GLOW2)
-    for x in range(10, 12):
-        s.set_at((x, 20), GLOW2)
-    # Olhos
-    s.set_at((6, 8), GLOW_EYE)
-    s.set_at((9, 8), GLOW_EYE)
-    s.set_at((6, 9), GLOW_EYE)
-    s.set_at((9, 9), GLOW_EYE)
+        y_base = 16 + (x % 2) * (1 - frame)
+        for y in range(y_base, y_base + 4):
+            if y < 24:
+                s.set_at((x, y), GLOW2)
+
+    # Cabelo sutil para diferenciar gênero
+    if gender == "boy":
+        for x in range(5, 11):
+            s.set_at((x, 2), HAIR_C)
+    else:
+        for x in range(4, 12):
+            s.set_at((x, 2), HAIR_C)
+            s.set_at((x, 3), HAIR_C)
+        for y in range(2, 8):
+            s.set_at((4, y), HAIR_C)
+            s.set_at((11, y), HAIR_C)
+
+    # Olhos (dependendo da direção)
+    if direction == "down":
+        s.set_at((6, 8), GLOW_EYE)
+        s.set_at((9, 8), GLOW_EYE)
+    elif direction == "up":
+        pass
+    elif direction == "left":
+        s.set_at((5, 8), GLOW_EYE)
+    elif direction == "right":
+        s.set_at((10, 8), GLOW_EYE)
+        
     return s
+
+def draw_imaginary_friend():
+    # Mantém compatibilidade com o sprite original da cutscene
+    return draw_ghost_sprite("boy", "down", 0)
 
 # ─────────────────────────────────────────────
 # MOB GENÉRICO (slime 12x10)
@@ -777,6 +805,12 @@ def generate_all():
     save_surface(draw_girl_sprite("right", 0), f"{ASSETS_DIR}/sprites/girl_right_0.png")
     save_surface(draw_girl_sprite("right", 1), f"{ASSETS_DIR}/sprites/girl_right_1.png")
 
+    # Sprites do Fantasma (P2)
+    for g in ["boy", "girl"]:
+        for d in ["down", "up", "left", "right"]:
+            for f in range(2):
+                save_surface(draw_ghost_sprite(g, d, f), f"{ASSETS_DIR}/sprites/ghost_{g}_{d}_{f}.png")
+
     save_surface(draw_imaginary_friend(), f"{ASSETS_DIR}/sprites/imaginary_friend.png")
 
     # Spritesheets
@@ -831,6 +865,10 @@ def generate_all():
     # Ícones de seleção
     save_surface(draw_selection_boy_icon(),  f"{ASSETS_DIR}/ui/select_boy.png")
     save_surface(draw_selection_girl_icon(), f"{ASSETS_DIR}/ui/select_girl.png")
+    
+    # Ícones de seleção Fantasma
+    save_surface(pygame.transform.scale(draw_ghost_sprite("boy", "down", 0), (48, 72)), f"{ASSETS_DIR}/ui/select_ghost_boy.png")
+    save_surface(pygame.transform.scale(draw_ghost_sprite("girl", "down", 0), (48, 72)), f"{ASSETS_DIR}/ui/select_ghost_girl.png")
 
     print("Todos os assets gerados com sucesso!")
 
