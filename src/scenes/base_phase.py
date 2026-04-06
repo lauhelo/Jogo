@@ -308,27 +308,99 @@ class BasePhase:
                 self._paused = True
                 self.game._scene = PauseScene(self.game, self)
 
+    def _get_keyboard_state(self, key_map: dict) -> dict:
+        """
+        Retorna o estado do teclado diretamente.
+        
+        Args:
+            key_map: {ação: pygame.K_*} mapeamento de teclado
+            
+        Returns:
+            pygame.key.get_pressed() (indexável por K_*)
+        """
+        return pygame.key.get_pressed()
+
+    def _get_joystick_state(self, joystick_index: int, key_map: dict) -> dict:
+        """
+        Obtém estado do joystick e converte para dicionário de overrides.
+        
+        Args:
+            joystick_index: 0 ou 1 (qual joystick)
+            key_map: {ação: pygame.K_*} para mapear as ações
+            
+        Returns:
+            {K_*: bool} overrides do joystick (apenas teclas pressionadas)
+        """
+        if not self.game.joystick_system.has_joysticks():
+            return {}
+
+        joy_state = self.game.joystick_system.get_joystick_input(joystick_index)
+
+        # Mapeia ações de joystick para pygame.K_* codes
+        overrides = {}
+        for action, key_name in key_map.items():
+            if joy_state.get(action, False):
+                key_code = KEY_MAP[key_name]
+                overrides[key_code] = True
+
+        return overrides
+
+    def _create_merged_keys(self, keys_pressed, joystick_overrides: dict):
+        """
+        Cria um objeto indexável que mescla teclado + joystick.
+        Joystick sobrescreve teclado quando pressionado.
+        
+        Args:
+            keys_pressed: pygame.key.get_pressed()
+            joystick_overrides: {K_*: True} somente para keys pressionadas
+            
+        Returns:
+            Objeto indexável que simula pygame.key.get_pressed()
+        """
+        class MergedKeys:
+            def __init__(self, keyboard, overrides):
+                self.keyboard = keyboard
+                self.overrides = overrides
+            
+            def __getitem__(self, key_code):
+                # Joystick tem prioridade
+                if key_code in self.overrides:
+                    return self.overrides[key_code]
+                # Fallback para teclado
+                return self.keyboard[key_code]
+        
+        return MergedKeys(keys_pressed, joystick_overrides)
+
     def update(self, dt_ms):
         if self._paused:
             return
 
         keys = pygame.key.get_pressed()
 
-        # Input dos jogadores
-        p1_action = keys[KEY_MAP["e"]]
-        p2_action = keys[KEY_MAP["return"]]
-
+        # Prepara key maps
         p1_key_map = {k: KEY_MAP[v] for k, v in PLAYER1_KEYS.items()}
         p2_key_map = {k: KEY_MAP[v] for k, v in PLAYER2_KEYS.items()}
+
+        # Input do joystick
+        p1_joystick_overrides = self._get_joystick_state(0, p1_key_map)
+        p2_joystick_overrides = self._get_joystick_state(1, p2_key_map)
+
+        # Mescla teclado + joystick
+        p1_keys = self._create_merged_keys(keys, p1_joystick_overrides)
+        p2_keys = self._create_merged_keys(keys, p2_joystick_overrides)
+
+        # Input dos jogadores (ação)
+        p1_action = p1_keys[KEY_MAP["e"]]
+        p2_action = p2_keys[KEY_MAP["return"]]
 
         alive_players = [p for p in self.players if p.alive]
 
         if self.players[0].alive:
-            self.players[0].handle_input(keys, p1_key_map, self.walls, self.players, self._map_rect)
+            self.players[0].handle_input(p1_keys, p1_key_map, self.walls, self.players, self._map_rect)
             self._check_interactions(self.players[0], p1_action)
 
         if len(self.players) > 1 and self.players[1].alive:
-            self.players[1].handle_input(keys, p2_key_map, self.walls, self.players, self._map_rect)
+            self.players[1].handle_input(p2_keys, p2_key_map, self.walls, self.players, self._map_rect)
             self._check_interactions(self.players[1], p2_action)
 
         # Animação dos jogadores

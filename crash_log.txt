@@ -1,15 +1,15 @@
-ERRO CRÍTICO: function takes at most 2 arguments (3 given)
+ERRO CRÍTICO: list index out of range
 Traceback (most recent call last):
   File "C:\Users\Alicia\Desktop\escape_room\main.py", line 26, in main
     game.run()
     ~~~~~~~~^^
-  File "C:\Users\Alicia\Desktop\escape_room\src\game.py", line 250, in run
-    self._scene.draw(self.screen)
-    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "C:\Users\Alicia\Desktop\escape_room\src\scenes\base_phase.py", line 432, in draw
-    self._apply_glitch(surface)
-    ~~~~~~~~~~~~~~~~~~^^^^^^^^^
-  File "C:\Users\Alicia\Desktop\escape_room\src\scenes\base_phase.py", line 460, in _apply_glitch
-    surface.scroll(shift, 0, pygame.Rect(0, y, SCREEN_WIDTH, 1))
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: function takes at most 2 arguments (3 given)
+  File "C:\Users\Alicia\Desktop\escape_room\src\game.py", line 236, in run
+    self._scene.update(dt_ms)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Alicia\Desktop\escape_room\src\scenes\base_phase.py", line 400, in update
+    self.players[1].handle_input(p2_keys, p2_key_map, self.walls, self.players, self._map_rect)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alicia\Desktop\escape_room\src\entities\player.py", line 72, in handle_input
+    if keys[key_map["up"]]:
+       ~~~~^^^^^^^^^^^^^^^
+IndexError: list index out of range

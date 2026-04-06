@@ -11,6 +11,7 @@ from src.constants import (
     SCENE_GAME, SCENE_GAMEOVER, SCENE_WIN, SCENE_CREDITS,
     PHASE_ORDER, PHASE_GARDEN,
 )
+from src.systems.joystick_input import JoystickInputSystem
 
 
 class Game:
@@ -41,6 +42,9 @@ class Game:
 
         self.clock   = pygame.time.Clock()
         self.running = True
+
+        # Inicializa sistema de joystick
+        self.joystick_system = JoystickInputSystem()
 
         # Estado global
         self.player_genders  = ["boy", "girl"]   # definido na tela de seleção

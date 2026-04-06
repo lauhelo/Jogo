@@ -81,6 +81,44 @@ O jogo é uma aventura cooperativo para 2 jogadores onde vocês devem escapar de
 | **Sair do Jogo** | `F4` | `F4` |
 | **Menu de Pausa** | `Esc` | `Esc` |
 
+### 🎮 Suporte a Joystick/Controle USB
+
+O jogo suporta **até 2 joysticks USB** conectados simultaneamente! Você pode jogar com:
+- ✅ **Teclado** (WASD + Setas)
+- ✅ **Joystick USB** (1 ou 2 controles)
+- ✅ **Combinação** (teclado + joystick ao mesmo tempo)
+
+#### Como usar:
+
+1. **Conecte 1 ou 2 joysticks USB** ao seu computador
+2. **Execute o jogo:**
+   ```bash
+   python3 main.py
+   ```
+3. O jogo **detectará automaticamente** os joysticks
+4. Use os **sticks analógicos** ou **D-pad** para mover
+5. Use **X, A ou outro botão primário** para interagir
+
+#### Mapeamento de Botões:
+
+- **Analógico/D-pad**: Movimento (cima/baixo/esquerda/direita)
+- **Botão X** ou **Botão A**: Interagir/Ativar
+- **Botão Pause/Menu**: Pausa o jogo (via teclado ESC)
+
+#### Compatibilidade:
+
+Funciona com qualquer **joystick USB padrão** conectado via USB:
+- ✅ Xbox One/Series controllers
+- ✅ PlayStation 4/5 controllers
+- ✅ Controles genéricos USB
+- ✅ Arcade joysticks
+- ✅ **Especial para Raspberry Pi** - ligoque o joystick USB direto à porta/hub USB do RPi
+
+#### ⚠️ Notas:
+
+- Teclado e joystick funcionam **simultaneamente** (você pode usar ambos)
+- Se nenhum joystick estiver conectado, o jogo usa apenas teclado
+- Joystick funciona **tanto em Windows como em Raspberry Pi**
 
 
 ## 🗺️ Fases do Jogo
